@@ -1,29 +1,24 @@
 import pandas as pd
-import joblib
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 
-def train_model(data_path, model_path):
-    df = pd.read_csv(data_path)
+def preprocess_data(input_path, output_path):
+    df = pd.read_csv(input_path)
 
-    # Splitting data
-    X = df[['Size', 'Location']]
-    y = df['Price']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Handling missing values
+    df.fillna(df.mean(numeric_only=True), inplace=True)
 
-    # Training model
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
+    # Encoding categorical variables
+    if 'Location' in df.columns:
+        label_encoder = LabelEncoder()
+        df['Location'] = label_encoder.fit_transform(df['Location'])
 
-    # Model evaluation
-    y_pred = model.predict(X_test)
-    mae = mean_absolute_error(y_test, y_pred)
-    print(f"Model trained! MAE: {mae:.2f}")
+    # Feature Scaling
+    if {'Size', 'Location'}.issubset(df.columns):
+        scaler = StandardScaler()
+        df[['Size', 'Location']] = scaler.fit_transform(df[['Size', 'Location']])
 
-    # Save model
-    joblib.dump(model, model_path)
+    df.to_csv(output_path, index=False)
+    print("Feature engineering completed successfully!")
 
 if __name__ == "__main__":
-    train_model("data/processed_housing_prices.csv", "model.pkl")
- 
+    preprocess_data("data1/housing_prices.csv", "data/processed_housing_prices.csv")
