@@ -5,18 +5,20 @@ def preprocess_data(input_path, output_path):
     df = pd.read_csv(input_path)
 
     # Handling missing values
-    df.fillna(df.mean(), inplace=True)
+    df.fillna(df.mean(numeric_only=True), inplace=True)
 
     # Encoding categorical variables
-    label_encoder = LabelEncoder()
-    df['Location'] = label_encoder.fit_transform(df['Location'])
+    if 'Location' in df.columns:
+        label_encoder = LabelEncoder()
+        df['Location'] = label_encoder.fit_transform(df['Location'])
 
     # Feature Scaling
-    scaler = StandardScaler()
-    df[['Size', 'Location']] = scaler.fit_transform(df[['Size', 'Location']])
+    if {'Size', 'Location'}.issubset(df.columns):
+        scaler = StandardScaler()
+        df[['Size', 'Location']] = scaler.fit_transform(df[['Size', 'Location']])
 
     df.to_csv(output_path, index=False)
     print("Feature engineering completed successfully!")
 
 if __name__ == "__main__":
-    preprocess_data("data/raw_housing_data.csv", "data/processed_housing_data.csv")
+    preprocess_data("data1/housing_prices.csv", "data1/processed_housing_prices.csv")
