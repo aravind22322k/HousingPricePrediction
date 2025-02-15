@@ -25,5 +25,5 @@ def train_model(data_path, model_path):
     joblib.dump(model, model_path)
 
 if __name__ == "__main__":
-    train_model("data/processed_housing_data.csv", "model.pkl")
- `
+    train_model("data/processed_housing_prices.csv", "model.pkl")
+ 
