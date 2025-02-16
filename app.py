@@ -8,7 +8,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 
 # Load dataset
-df = pd.read_csv("Housing_prices.csv")
+df = pd.read_csv("data1/housing_prices.csv")
 
 # Define features and target
 X = df[["Size", "Location", "Bedrooms", "Bathrooms", "YearBuilt"]]
