@@ -2,29 +2,27 @@ from flask import Flask, request, render_template, jsonify
 import pandas as pd
 import pickle
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
+import os
 
 # Load dataset
-df = pd.read_csv("data1/housing_prices.csv")
+data_path = "data1/housing_prices.csv"
+df = pd.read_csv(data_path)
+
+df.dropna(inplace=True)  # Drop missing values to avoid errors
 
 # Define features and target
-X = df[["Size", "Location", "Bedrooms", "Bathrooms", "YearBuilt"]]
+X = df[["SquareFeet", "NumBedrooms", "NumBathrooms", "GarageSpaces", "YearBuilt", "LocationScore"]]
 y = df["Price"]
 
-# Preprocessing: OneHotEncoding for 'Location'
-categorical_features = ["Location"]
-numeric_features = ["Size", "Bedrooms", "Bathrooms", "YearBuilt"]
-preprocessor = ColumnTransformer([
-    ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features),
-    ('num', 'passthrough', numeric_features)
-])
+# Preprocessing: Scaling numerical features
+scaler = StandardScaler()
 
 # Build model pipeline
 model = Pipeline([
-    ('preprocessor', preprocessor),
+    ('scaler', StandardScaler()),
     ('regressor', LinearRegression())
 ])
 
@@ -33,11 +31,12 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 model.fit(X_train, y_train)
 
 # Save model
-with open("model.pkl", "wb") as f:
+model_path = "model.pkl"
+with open(model_path, "wb") as f:
     pickle.dump(model, f)
 
 # Flask app
-app = Flask(_name_)
+app = Flask(__name__)
 
 @app.route('/')
 def home():
@@ -45,20 +44,24 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.form
-    input_data = pd.DataFrame({
-        "Size": [int(data["size"])],
-        "Location": [data["location"]],
-        "Bedrooms": [int(data["bedrooms"])],
-        "Bathrooms": [int(data["bathrooms"])],
-        "YearBuilt": [int(data["yearbuilt"])]
-    })
-    
-    with open("model.pkl", "rb") as f:
-        loaded_model = pickle.load(f)
-    prediction = loaded_model.predict(input_data)[0]
-    
-    return jsonify({"predicted_price": round(prediction, 2)})
+    try:
+        data = request.form
+        input_data = pd.DataFrame({
+            "SquareFeet": [float(data["squarefeet"])],
+            "NumBedrooms": [int(data["num_bedrooms"])],
+            "NumBathrooms": [int(data["num_bathrooms"])],
+            "GarageSpaces": [int(data["garage_spaces"])],
+            "YearBuilt": [int(data["yearbuilt"])],
+            "LocationScore": [float(data["location_score"])]
+        })
+        
+        with open(model_path, "rb") as f:
+            loaded_model = pickle.load(f)
+        prediction = loaded_model.predict(input_data)[0]
+        
+        return jsonify({"predicted_price": round(prediction, 2)})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(debug=True)
