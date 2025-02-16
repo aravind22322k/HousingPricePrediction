@@ -21,4 +21,4 @@ def preprocess_data(input_path, output_path):
     print("Feature engineering completed successfully!")
 
 if __name__ == "__main__":
-    preprocess_data("data1/housing_prices.csv", "data/processed_housing_prices.csv")
+    preprocess_data("data1/housing_prices.csv", "data1/processed_housing_prices.csv")
